@@ -1,0 +1,32 @@
+info:
+  name: Login
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://localhost:8082/api/usuarios/login
+  body:
+    type: json
+    data: |-
+      {
+        "correo": "cliente1@test.com",
+        "contrasena": "123456"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        // Supongamos que tu respuesta es { "access_token": "ey..." }
+        const data = res.getBody();
+        if (data.token) {
+            bru.setEnvVar("access_token", data.token);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

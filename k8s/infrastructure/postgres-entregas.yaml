@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: entregas-postgres-secret
+type: Opaque
+stringData:
+  POSTGRES_USER: entregas_pedidos
+  POSTGRES_PASSWORD: user123
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: entregas-postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-entregas
+spec:
+  serviceName: postgres-entregas
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-entregas
+  template:
+    metadata:
+      labels:
+        app: postgres-entregas
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: entregas_pedidos_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: entregas-postgres-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: entregas-postgres-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: entregas-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-entregas
+spec:
+  selector:
+    app: postgres-entregas
+  ports:
+    - name: tcp
+      port: 5432
+      targetPort: 5432

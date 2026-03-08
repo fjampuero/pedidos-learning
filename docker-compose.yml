@@ -1,0 +1,99 @@
+version: "3.9"
+
+services:
+
+  postgres-usuarios:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: usuarios_pedidos_db
+      POSTGRES_USER: usuarios_pedidos
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5420:5432"
+    volumes:
+      - postgres_usuarios_data:/var/lib/postgresql/data
+
+  postgres-catalogo:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: catalogo_pedidos_db
+      POSTGRES_USER: catalogo_pedidos
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5421:5432"
+    volumes:
+      - postgres_catalogo_data:/var/lib/postgresql/data
+
+  postgres-orders:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: orders_pedidos_db
+      POSTGRES_USER: orders_pedidos
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5422:5432"
+    volumes:
+      - postgres_orders_data:/var/lib/postgresql/data
+
+  postgres-payments:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: payments_pedidos_db
+      POSTGRES_USER: payments_pedidos
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5423:5432"
+    volumes:
+      - postgres_payments_data:/var/lib/postgresql/data
+
+  postgres-entregas:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: entregas_pedidos_db
+      POSTGRES_USER: entregas_pedidos
+      POSTGRES_PASSWORD: user123
+    ports:
+      - "5424:5432"
+    volumes:
+      - postgres_entregas_data:/var/lib/postgresql/data
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080"
+
+volumes:
+  postgres_usuarios_data:
+  postgres_catalogo_data:
+  postgres_orders_data:
+  postgres_payments_data:
+  postgres_entregas_data:

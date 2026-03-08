@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5424/entregas_pedidos_db
+    username: entregas_pedidos
+    password: user123
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: entregas-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.codigo.pedido.entregas.infrastructure.messaging.event"
+        spring.json.value.default.type: com.codigo.pedido.entregas.infrastructure.messaging.event.PagoAprobadoEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+server:
+  port: 8086
+
+events:
+  topics:
+    pago-aprobado: pago-aprobado
+    entrega-creada: entrega-creada
+    entrega-actualizada: entrega-actualizada
+
+resilience:
+  kafka:
+    max-retries: 3
+    retry-interval-ms: 2000

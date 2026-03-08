@@ -1,0 +1,22 @@
+info:
+  name: Registro usuario
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8082/api/usuarios/registro
+  body:
+    type: json
+    data: |-
+      {
+        "nombre": "cliente1",
+        "correo": "cliente1@test.com",
+        "contrasena": "123456"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

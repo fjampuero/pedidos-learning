@@ -1,0 +1,12 @@
+opencollection: 1.0.0
+info:
+  name: "Tecsup-pedidos"
+  type: workspace
+
+collections:
+  - name: "Tecsup"
+    path: "collections/Tecsup"
+
+specs:
+
+docs: ''

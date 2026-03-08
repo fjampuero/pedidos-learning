@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pedidos-dev
+
+resources:
+  - namespace.yaml
+  - infrastructure/messaging-config.yaml
+  - infrastructure/postgres-usuarios.yaml
+  - infrastructure/postgres-catalogo.yaml
+  - infrastructure/postgres-orders.yaml
+  - infrastructure/postgres-payments.yaml
+  - infrastructure/postgres-entregas.yaml
+  - apps/usuarios.yaml
+  - apps/catalogo.yaml
+  - apps/orders.yaml
+  - apps/payments.yaml
+  - apps/entregas.yaml

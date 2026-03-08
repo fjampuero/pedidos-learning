@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: entregas-app-secret
+type: Opaque
+stringData:
+  SPRING_DATASOURCE_USERNAME: entregas_pedidos
+  SPRING_DATASOURCE_PASSWORD: user123
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: entregas
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: entregas
+  template:
+    metadata:
+      labels:
+        app: entregas
+    spec:
+      containers:
+        - name: entregas
+          image: entregas:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8086
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres-entregas:5432/entregas_pedidos_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: entregas-app-secret
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: entregas-app-secret
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: messaging-config
+                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: entregas
+spec:
+  selector:
+    app: entregas
+  ports:
+    - name: http
+      port: 8086
+      targetPort: 8086

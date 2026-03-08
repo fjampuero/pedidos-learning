@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5421/catalogo_pedidos_db
+    username: catalogo_pedidos
+    password: user123
+
+server:
+  port: 8083

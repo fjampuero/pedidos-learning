@@ -1,0 +1,15 @@
+info:
+  name: ListarProductos
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: http://localhost:8080/api/catalogo/restaurantes/08401a8b-d47a-4bdb-b7e1-5cec03ef59a8/productos
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
