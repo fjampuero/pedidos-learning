@@ -1,0 +1,83 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+    }
+
+    parameters {
+        booleanParam(name: 'DEPLOY_TO_K8S', defaultValue: true, description: 'Desplegar en Kubernetes al finalizar el build')
+        string(name: 'REGISTRY_URL', defaultValue: 'docker.io/TU_USUARIO', description: 'Registry donde se publicara la imagen')
+        string(name: 'IMAGE_TAG', defaultValue: '', description: 'Tag de imagen. Si se deja vacio se usa BUILD_NUMBER')
+    }
+
+    environment {
+        SERVICE_NAME = 'entregas'
+        SERVICE_DIR = '/workspace/ms/entregas'
+        NAMESPACE = 'pedidos-dev'
+        DOCKER_CREDENTIALS_ID = 'docker-registry-credentials'
+        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-pedidos'
+    }
+
+    stages {
+        stage('Init') {
+            steps {
+                script {
+                    env.RESOLVED_IMAGE_TAG = params.IMAGE_TAG?.trim() ? params.IMAGE_TAG.trim() : env.BUILD_NUMBER
+                    env.FULL_IMAGE = "${params.REGISTRY_URL}/${env.SERVICE_NAME}:${env.RESOLVED_IMAGE_TAG}"
+                }
+                echo "Construyendo ${env.SERVICE_NAME} con tag ${env.RESOLVED_IMAGE_TAG}"
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                dir("${env.SERVICE_DIR}") {
+                    sh './mvnw -DskipTests compile'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t ${FULL_IMAGE} ${SERVICE_DIR}'
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        docker push ${FULL_IMAGE}
+                        docker logout
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Kubernetes') {
+            when {
+                expression { return params.DEPLOY_TO_K8S }
+            }
+            steps {
+                withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl apply -f /workspace/ms/k8s/apps/entregas.yaml -n ${NAMESPACE}
+                        kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${FULL_IMAGE} -n ${NAMESPACE}
+                        kubectl rollout status deployment/${SERVICE_NAME} -n ${NAMESPACE}
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline de ${env.SERVICE_NAME} completado correctamente con tag ${env.RESOLVED_IMAGE_TAG}"
+        }
+        failure {
+            echo "Pipeline de ${env.SERVICE_NAME} fallido. Revisar logs del stage correspondiente."
+        }
+    }
+}
