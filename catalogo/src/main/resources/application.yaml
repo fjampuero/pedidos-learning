@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: catalogo-service
   datasource:
     url: jdbc:postgresql://localhost:5421/catalogo_pedidos_db
     username: catalogo_pedidos

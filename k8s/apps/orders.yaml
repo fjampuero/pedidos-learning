@@ -4,8 +4,8 @@ metadata:
   name: orders-app-secret
 type: Opaque
 stringData:
-  SPRING_DATASOURCE_USERNAME: orders_pedidos
-  SPRING_DATASOURCE_PASSWORD: user123
+  DB_USERNAME: orders_pedidos
+  DB_PASSWORD: user123
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -28,27 +28,45 @@ spec:
           ports:
             - containerPort: 8084
           env:
-            - name: SPRING_DATASOURCE_URL
+            - name: SPRING_PROFILES_ACTIVE
+              value: kubernetes
+            - name: DB_URL
               value: jdbc:postgresql://postgres-orders:5432/orders_pedidos_db
-            - name: SPRING_DATASOURCE_USERNAME
+            - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: orders-app-secret
-                  key: SPRING_DATASOURCE_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: orders-app-secret
-                  key: SPRING_DATASOURCE_PASSWORD
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                  key: DB_PASSWORD
+            - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 configMapKeyRef:
                   name: messaging-config
                   key: SPRING_KAFKA_BOOTSTRAP_SERVERS
-            - name: INTEGRATIONS_USUARIOS_BASE_URL
+            - name: USUARIOS_BASE_URL
               value: http://usuarios:8082
-            - name: INTEGRATIONS_CATALOGO_BASE_URL
+            - name: CATALOGO_BASE_URL
               value: http://catalogo:8083
+            - name: LOG_LEVEL
+              value: INFO
+            - name: DDL_AUTO
+              value: update
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            initialDelaySeconds: 40
+            periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service

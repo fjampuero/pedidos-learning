@@ -1,0 +1,87 @@
+1. Crear docker-compose en la raiz
+	docker-compose up -d
+2. Para saber quienes estas suscritos kafka
+	docker exec -it ms-kafka-1 kafka-consumer-groups --bootstrap-server localhost:9092 --list
+
+
+-- Memorias
+* Se ha creado el servicio usuario con el mapeo de la base de datos
+* Se ha creado la base contenido en docker, 
+* Se ha levantado spring y todo ok
+
+-- Pendientes
+El siguiente paso lógico sería endurecer la regla de negocio: validar que todos los productoId realmente pertenezcan a ese restauranteId consultando catalogo.
+
+integrar orders con usuarios y catalogo
+Para validar usuario existente, productos válidos, disponibilidad y cálculo real del total.
+
+probar integración end-to-end
+Registrar usuario, crear restaurante, crear productos y luego crear pedido en orders.
+corregir errores reales del flujo
+Validaciones, respuestas HTTP, puertos, seguridad, payloads y persistencia.
+mejorar manejo de errores en orders
+Hoy varias validaciones lanzan IllegalArgumentException; conviene mapearlas a 400 o 404.
+
+Swagger:
+usuarios: http://localhost:8082/swagger-ui.html
+catalogo: http://localhost:8083/swagger-ui.html
+orders: http://localhost:8084/swagger-ui.html
+payments: http://localhost:8085/swagger-ui.html
+entregas: http://localhost:8086/swagger-ui.html
+
+Ejecutar Kubernetes
+1. Dockenizamos los servicios
+docker build -t usuarios:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/usuarios
+docker build -t catalogo:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/catalogo
+docker build -t orders:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/orders
+docker build -t payments:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/payments
+docker build -t entregas:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/entregas
+
+2. Desplegar los ms
+kubectl apply -k /Users/joelampuero/Documents/Learning/Tecsup/ms/k8s
+kubectl get pods -n pedidos-dev -w
+
+3. Ver estados
+kubectl get all -n pedidos-dev
+
+4. Para exponer por port forward
+kubectl port-forward -n pedidos-dev svc/usuarios 8082:8082
+kubectl port-forward -n pedidos-dev svc/catalogo 8083:8083
+kubectl port-forward -n pedidos-dev svc/orders 8084:8084
+kubectl port-forward -n pedidos-dev svc/payments 8085:8085
+kubectl port-forward -n pedidos-dev svc/entregas 8086:8086
+
+
+5. Monitoreo
+kubectl logs -n pedidos-dev deployment/orders -f
+kubectl logs -n pedidos-dev deployment/payments -f
+kubectl logs -n pedidos-dev deployment/entregas -f
+
+
+6. Eliminar
+kubectl delete -k /Users/joelampuero/Documents/Learning/Tecsup/ms/k8s
+
+7. Limpiar imagenes
+docker rmi usuarios:latest catalogo:latest orders:latest payments:latest entregas:latest
+
+
+8. Para levantar porforward
+
+- Dar permisos: chmod +x /Users/joelampuero/Documents/Learning/Tecsup/ms/port-forward.sh
+/Users/joelampuero/Documents/Learning/Tecsup/ms/port-forward.sh
+
+- Ejecutar: /Users/joelampuero/Documents/Learning/Tecsup/ms/port-forward.sh
+
+- Detener: pkill -f "kubectl port-forward -n pedidos-dev"
+
+- Verificar si estan activos: ps aux | grep "kubectl port-forward"
+
+- Logs: cat /tmp/ms-port-forward/orders.log
+cat /tmp/ms-port-forward/payments.log
+
+9. Volver a pasar a kubernetes un ms:
+
+ - docker build -t usuarios:latest /Users/joelampuero/Documents/Learning/Tecsup/ms/usuarios
+ - kubectl apply -f /Users/joelampuero/Documents/Learning/Tecsup/ms/k8s/apps/usuarios.yaml -n pedidos-dev
+ - kubectl rollout restart deployment/usuarios -n pedidos-dev
+

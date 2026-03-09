@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: payments-service
   datasource:
     url: jdbc:postgresql://localhost:5423/payments_pedidos_db
     username: payments_pedidos

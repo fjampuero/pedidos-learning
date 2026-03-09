@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: orders-service
   datasource:
     url: jdbc:postgresql://localhost:5422/orders_pedidos_db
     username: orders_pedidos

@@ -1,0 +1,47 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: usuarios-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres-usuarios:5432/usuarios_pedidos_db}
+    username: ${DB_USERNAME:usuarios_pedidos}
+    password: ${DB_PASSWORD:user123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${POOL_SIZE:10}
+      minimum-idle: ${POOL_MIN_IDLE:5}
+      connection-timeout: ${POOL_CONNECTION_TIMEOUT:20000}
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    com.codigo.pedido.usuarios: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}

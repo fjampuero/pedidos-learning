@@ -1,0 +1,78 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: orders-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres-orders:5432/orders_pedidos_db}
+    username: ${DB_USERNAME:orders_pedidos}
+    password: ${DB_PASSWORD:user123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${POOL_SIZE:10}
+      minimum-idle: ${POOL_MIN_IDLE:5}
+      connection-timeout: ${POOL_CONNECTION_TIMEOUT:20000}
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:host.docker.internal:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:orders-service}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.codigo.pedido.orders.infrastructure.messaging.event"
+        spring.json.value.default.type: com.codigo.pedido.orders.infrastructure.messaging.event.PagoAprobadoEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+
+integrations:
+  usuarios:
+    base-url: ${USUARIOS_BASE_URL:http://usuarios:8082}
+  catalogo:
+    base-url: ${CATALOGO_BASE_URL:http://catalogo:8083}
+
+events:
+  topics:
+    pedido-creado: ${TOPIC_PEDIDO_CREADO:pedido-creado}
+    pago-aprobado: ${TOPIC_PAGO_APROBADO:pago-aprobado}
+
+resilience:
+  circuit-breaker:
+    failure-threshold: ${CIRCUIT_BREAKER_FAILURE_THRESHOLD:3}
+    open-duration-ms: ${CIRCUIT_BREAKER_OPEN_DURATION_MS:10000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  level:
+    com.codigo.pedido.orders: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}

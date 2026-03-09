@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: entregas-service
   datasource:
     url: jdbc:postgresql://localhost:5424/entregas_pedidos_db
     username: entregas_pedidos
