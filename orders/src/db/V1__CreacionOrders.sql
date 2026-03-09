@@ -1,3 +1,4 @@
+--Creacion de los pedidos y los items de los pedidos
 CREATE TABLE pedidos (
                          id UUID PRIMARY KEY,
                          usuario_id UUID NOT NULL,
