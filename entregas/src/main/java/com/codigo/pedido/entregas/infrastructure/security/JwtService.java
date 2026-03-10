@@ -3,6 +3,7 @@ package com.codigo.pedido.entregas.infrastructure.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -13,10 +14,14 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private final String SECRET = "clave_super_secreta_clave_super_secreta_12345";
+    private final String secret;
+
+    public JwtService(@Value("${security.jwt.secret}") String secret) {
+        this.secret = secret;
+    }
 
     private Key getSignKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String extraerCorreo(String token) {

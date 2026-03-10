@@ -5,7 +5,7 @@ spring:
   application:
     name: entregas-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://postgres-entregas:5432/entregas_pedidos_db}
+    url: ${DB_URL:jdbc:postgresql://host.docker.internal:5424/entregas_pedidos_db}
     username: ${DB_USERNAME:entregas_pedidos}
     password: ${DB_PASSWORD:user123}
     driver-class-name: org.postgresql.Driver
@@ -71,3 +71,7 @@ logging:
   level:
     com.codigo.pedido.entregas: ${LOG_LEVEL:INFO}
     org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+
+security:
+  jwt:
+    secret: ${SECURITY_JWT_SECRET:clave_super_secreta_clave_super_secreta_12345}

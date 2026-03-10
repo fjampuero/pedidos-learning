@@ -34,3 +34,7 @@ resilience:
   kafka:
     max-retries: 3
     retry-interval-ms: 2000
+
+security:
+  jwt:
+    secret: ${SECURITY_JWT_SECRET:clave_super_secreta_clave_super_secreta_12345}

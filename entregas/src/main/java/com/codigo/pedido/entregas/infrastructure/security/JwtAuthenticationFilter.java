@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -36,21 +39,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String correo = jwtService.extraerCorreo(token);
-        String rol = jwtService.extraerRol(token);
-        UUID userId = jwtService.extraerUserId(token);
+        try {
+            String correo = jwtService.extraerCorreo(token);
+            String rol = jwtService.extraerRol(token);
+            UUID userId = jwtService.extraerUserId(token);
 
-        if (correo != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            if (jwtService.esTokenValido(token, correo)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userId,
-                                null,
-                                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + rol))
-                        );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            log.info("JWT Filter - correo: {}, rol: {}, userId: {}", correo, rol, userId);
+
+            if (correo != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (jwtService.esTokenValido(token, correo)) {
+                    log.info("Token válido. Creando autoridad: ROLE_{}", rol);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userId,
+                                    null,
+                                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + rol))
+                            );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.info("Autenticación establecida para usuario: {}", correo);
+                } else {
+                    log.warn("Token inválido para correo: {}", correo);
+                }
             }
+        } catch (Exception e) {
+            log.error("Error al procesar JWT: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
